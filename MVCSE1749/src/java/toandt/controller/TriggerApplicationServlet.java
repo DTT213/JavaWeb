@@ -7,30 +7,24 @@ package toandt.controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import javax.servlet.RequestDispatcher;
+import java.sql.SQLException;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import toandt.login.LoginDAO;
 
 /**
  *
  * @author Toan
  */
-@WebServlet(name = "MasterController", urlPatterns = {"/MasterController"})
-public class MasterController extends HttpServlet {
-
-    private final String LOGIN_PAGE = "login.html";
-    private final String LOGIN_CONTROLLER = "LoginServlet";
-    private final String SEARCH_LASTNAME_CONTROLLER = "SearchLastnameServlet";
-    private final String DELETE_USERNAME_CONTROLLER = "DeleteUsernameServlet";
-    private final String UPDATE_ACCOUNT_CONTROLLER = "UpdateAccountServlet";
-    private final String TRIGGER_APPLICATION_CONTROLLER = "TriggerApplication";
-    private final String ADD_ITEM_TO_CART_SERVLET = "AddItemToCartServlet";
-    private final String VIEW_CART_PAGE = "viewCart.jsp";
-    private final String REMOVE_ITEM_FROM_CART = "RemoveItemFromCartServlet";
-    private final String CREATE_NEW_ACCOUNT= "CreateNewAccountServlet";
+@WebServlet(name = "TriggerApplication", urlPatterns = {"/TriggerApplication"})
+public class TriggerApplicationServlet extends HttpServlet {
+    private final String LOGIN_PAGE="login.html";
+    private final String SEARCH_PAGE="search.jsp";
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -42,37 +36,32 @@ public class MasterController extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String url = LOGIN_PAGE;
         response.setContentType("text/html;charset=UTF-8");
-
-        //which button did user clicked?
-        String button = request.getParameter("btAction");
-        log("requested");
+        String url=LOGIN_PAGE;
         try {
-            if (button == null) {
-                //transfer to login page
-                url = TRIGGER_APPLICATION_CONTROLLER;
-            } else if (button.equals("Login")) {
-                url = LOGIN_CONTROLLER;
-            } else if (button.equals("Search")) {
-                url = SEARCH_LASTNAME_CONTROLLER;
-            } else if (button.equals("Delete")) {
-                url = DELETE_USERNAME_CONTROLLER;
-            } else if (button.equals("Update")) {
-                url = UPDATE_ACCOUNT_CONTROLLER;
-            } else if (button.equals("Add Book to Your Cart")) {
-                url = ADD_ITEM_TO_CART_SERVLET;
-                log("called");
-            } else if (button.equals("View Your Cart")) {
-                url = VIEW_CART_PAGE;
-            } else if (button.equals("Remove Selected Item")) {
-                url = REMOVE_ITEM_FROM_CART;
-            } else if (button.equals("Create New Account")) {
-                url = CREATE_NEW_ACCOUNT;
-            }
-        } finally {
-            RequestDispatcher rd = request.getRequestDispatcher(url);
-            rd.forward(request, response);
+            //1. get cookie
+            Cookie[] cookies = request.getCookies();
+            if (cookies!=null) {
+                //2. get last cookie
+                Cookie lastCookie = cookies[cookies.length-1];
+                //3. get username, password
+                String username = lastCookie.getName();
+                String password = lastCookie.getValue();
+                //4. call model
+                LoginDAO dao = new LoginDAO();
+                boolean result=dao.checkLogin(username, password);
+                if (result) {
+                url = SEARCH_PAGE;
+                }
+            }//end session time
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } catch (NamingException ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            response.sendRedirect(url);
+            //dung gi cung duoc
         }
     }
 

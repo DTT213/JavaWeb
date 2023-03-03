@@ -7,30 +7,22 @@ package toandt.controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import javax.servlet.RequestDispatcher;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import toandt.cart.CartObj;
 
 /**
  *
  * @author Toan
  */
-@WebServlet(name = "MasterController", urlPatterns = {"/MasterController"})
-public class MasterController extends HttpServlet {
+@WebServlet(name = "RemoveItemFromCartServlet", urlPatterns = {"/RemoveItemFromCartServlet"})
+public class RemoveItemFromCartServlet extends HttpServlet {
 
-    private final String LOGIN_PAGE = "login.html";
-    private final String LOGIN_CONTROLLER = "LoginServlet";
-    private final String SEARCH_LASTNAME_CONTROLLER = "SearchLastnameServlet";
-    private final String DELETE_USERNAME_CONTROLLER = "DeleteUsernameServlet";
-    private final String UPDATE_ACCOUNT_CONTROLLER = "UpdateAccountServlet";
-    private final String TRIGGER_APPLICATION_CONTROLLER = "TriggerApplication";
-    private final String ADD_ITEM_TO_CART_SERVLET = "AddItemToCartServlet";
-    private final String VIEW_CART_PAGE = "viewCart.jsp";
-    private final String REMOVE_ITEM_FROM_CART = "RemoveItemFromCartServlet";
-    private final String CREATE_NEW_ACCOUNT= "CreateNewAccountServlet";
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -42,37 +34,35 @@ public class MasterController extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String url = LOGIN_PAGE;
         response.setContentType("text/html;charset=UTF-8");
-
-        //which button did user clicked?
-        String button = request.getParameter("btAction");
-        log("requested");
         try {
-            if (button == null) {
-                //transfer to login page
-                url = TRIGGER_APPLICATION_CONTROLLER;
-            } else if (button.equals("Login")) {
-                url = LOGIN_CONTROLLER;
-            } else if (button.equals("Search")) {
-                url = SEARCH_LASTNAME_CONTROLLER;
-            } else if (button.equals("Delete")) {
-                url = DELETE_USERNAME_CONTROLLER;
-            } else if (button.equals("Update")) {
-                url = UPDATE_ACCOUNT_CONTROLLER;
-            } else if (button.equals("Add Book to Your Cart")) {
-                url = ADD_ITEM_TO_CART_SERVLET;
-                log("called");
-            } else if (button.equals("View Your Cart")) {
-                url = VIEW_CART_PAGE;
-            } else if (button.equals("Remove Selected Item")) {
-                url = REMOVE_ITEM_FROM_CART;
-            } else if (button.equals("Create New Account")) {
-                url = CREATE_NEW_ACCOUNT;
-            }
+            //1. customer goes to cart place
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                //2. customer take cart
+                CartObj cart = (CartObj)session.getAttribute("CART");
+                if (cart!=null) {
+                    //3. customer takes all items
+                    Map<String,Integer> items = cart.getItems();
+                    if (items!=null) {
+                        //4.remove item from cart
+                        String[] selectedItems = request.getParameterValues("chkItem");
+                        if (selectedItems !=null) {
+                            for (String item : selectedItems) {
+                                cart.removeItemFromCart(item, 1);
+                            } //end remove 1 item
+                            session.setAttribute("CART", cart);
+                            //update session
+                        }//end customer checked at least 1 item
+                    }
+                }
+            } //end session has existed
+            
         } finally {
-            RequestDispatcher rd = request.getRequestDispatcher(url);
-            rd.forward(request, response);
+            //5. refresh page by viewCart feature again using url rewritting
+            String urlRewrittting = "MasterController"
+                    + "?btAction=View Your Cart";
+            response.sendRedirect(urlRewrittting);
         }
     }
 

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import javax.naming.NamingException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,7 +25,7 @@ import toandt.util.DBHelper;
  */
 public class LoginServlet extends HttpServlet {
     private final String INVALID_PAGE = "invalid.html";
-    private final String SEARCH_PAGE = "search.html";
+    private final String SEARCH_PAGE = "search.jsp";
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -50,6 +51,10 @@ public class LoginServlet extends HttpServlet {
                 //4. Send view
                 if (result==true) {
                     url=SEARCH_PAGE; //send view
+                    //send cookies
+                    Cookie cookie = new Cookie(username,password);
+                    cookie.setMaxAge(60 * 3);
+                    response.addCookie(cookie);
                 }
         } catch (NamingException ex){
             ex.printStackTrace();
@@ -58,9 +63,9 @@ public class LoginServlet extends HttpServlet {
         }
         finally {
             //5.Set value Res Obj
-            //response.sendRedirect(url);
-            RequestDispatcher rd = request.getRequestDispatcher(url);
-            rd.forward(request, response);
+            response.sendRedirect(url);
+            //RequestDispatcher rd = request.getRequestDispatcher(url);
+            //rd.forward(request, response);
             //out.close();
         }
     }

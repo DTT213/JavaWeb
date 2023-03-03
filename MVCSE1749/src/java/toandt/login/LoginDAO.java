@@ -67,7 +67,7 @@ public class LoginDAO implements Serializable {
     public List<LoginDTO> getAccountList() {
         return accountList;
     }
-
+    
     public void searchLastName(String searchValue)
             throws SQLException, NamingException {
         Connection con = null;
@@ -111,6 +111,50 @@ public class LoginDAO implements Serializable {
                 con.close();
 
             }
+        }
+    }
+    public void deleteUsername(String pk)
+            throws SQLException,NamingException{
+        Connection con = null;
+        PreparedStatement stm = null;
+        try {
+            con= DBHelper.makeConnection();
+            if (con!=null){
+                String sql = "Delete "
+                        + "From Login "
+                        + "Where username = ?";
+                stm = con.prepareStatement(sql);
+                stm.setString(1, pk);
+                int row=stm.executeUpdate();
+            }
+        } finally {
+            if (stm!=null)
+                stm.close();
+            if (con!=null)
+                con.close();
+        }
+    }
+    public void updateAccount(String pk,String password, boolean isAdmin)
+        throws NamingException,SQLException{
+        Connection con = null;
+        PreparedStatement stm = null;
+        try {
+            con=DBHelper.makeConnection();
+            if (con!=null){
+                String sql = "Update Login "
+                        + "Set password=?,isAdmin=? "
+                        + "Where username=?";
+                stm = con.prepareStatement(sql);
+                stm.setString(1,password);
+                stm.setBoolean(2, isAdmin);
+                stm.setString(3, pk);
+                int row=stm.executeUpdate();
+            }
+        } finally{
+            if (stm!=null)
+                stm.close();
+            if (con!=null) 
+                con.close();
         }
     }
 }
